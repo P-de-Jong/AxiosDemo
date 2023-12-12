@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using OpenTelemetry;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -13,7 +14,8 @@ using var tracerProvider = Sdk.CreateTracerProviderBuilder()
     .AddSource("my-source-name")
     .AddOtlpExporter(otlpOptions =>
     {
-        otlpOptions.Endpoint = new Uri("https://api.axiom.co");
+        otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+        otlpOptions.Endpoint = new Uri("https://api.axiom.co/v1/traces");
         otlpOptions.Headers = $"Authorization=Bearer {API_KEY},X-Axiom-Dataset={DATA_SET}";
     })
     .Build();
