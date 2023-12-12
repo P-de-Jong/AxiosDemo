@@ -1,7 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -22,6 +24,25 @@ using var tracerProvider = Sdk.CreateTracerProviderBuilder()
 
 // Get a tracer
 var tracer = tracerProvider.GetTracer("my-source-name");
+
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddOpenTelemetry(logging =>
+    {
+        logging
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("my-service-name"))
+            .AddOtlpExporter(otlpOptions =>
+            {
+                otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+                otlpOptions.Endpoint = new Uri("https://api.axiom.co/v1/logs");
+                otlpOptions.Headers = $"Authorization=Bearer {API_KEY},X-Axiom-Dataset={DATA_SET}";
+            });
+    });
+});
+
+var logger = loggerFactory.CreateLogger<Program>();
+
+logger.LogInformation("Hello World!");
 
 // Start a span and do some work
 using (var span = tracer.StartActiveSpan("my-span-name"))
